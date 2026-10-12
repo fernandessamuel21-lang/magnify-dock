@@ -5,7 +5,9 @@ A floating dock for GNOME Shell with icon magnification.
 - Icons grow under the pointer and push their neighbours apart
 - Icons bounce while applications open
 - Dots under open applications
-- Applications button (opens the app grid) and Trash, with a menu to empty it
+- Applications button (opens the app grid)
+- Downloads folder next to the Trash: click to open it, right-click for your 10 most recent downloads
+- Trash, with a menu to empty it
 - Right-click an app for its windows, New Window, Pin/Unpin and Quit
 - Optional auto-hide: touch the bottom edge of the screen to show the dock
 - Hidden on full-screen windows and the lock screen; maximized windows stay above it
@@ -25,7 +27,7 @@ the Extensions app. Changes apply immediately.
 | Automatically hide and show the Dock | off |
 | Animate opening applications | on |
 | Show indicators for open applications | on |
-| Show Applications button / Trash | on / on |
+| Show Applications button / Downloads / Trash | on / on / on |
 
 ## Install from source
 

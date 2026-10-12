@@ -8,6 +8,7 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
+import Pango from 'gi://Pango';
 import Shell from 'gi://Shell';
 import St from 'gi://St';
 
@@ -31,6 +32,45 @@ const BOUNCES = 3;
 const AUTOHIDE_TIME = 200;     // ms to slide in/out
 const AUTOHIDE_DELAY = 400;    // ms after the pointer leaves before hiding
 const REBUILD_DELAY = 150;     // ms to coalesce settings changes
+const RECENT_DOWNLOADS = 10;   // files listed in the Downloads menu
+
+Gio._promisify(Gio.File.prototype, 'enumerate_children_async');
+Gio._promisify(Gio.FileEnumerator.prototype, 'next_files_async');
+
+function downloadsDir() {
+    const path = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DOWNLOAD) ??
+        GLib.build_filenamev([GLib.get_home_dir(), 'Downloads']);
+    return Gio.File.new_for_path(path);
+}
+
+function openUri(uri) {
+    try {
+        Gio.AppInfo.launch_default_for_uri(uri, global.create_app_launch_context(0, -1));
+    } catch (e) {
+        console.warn(`magnify-dock: cannot open ${uri}: ${e.message}`);
+    }
+}
+
+// Newest non-hidden entries of a directory, most recent first.
+async function recentFiles(dir, count) {
+    const all = [];
+    try {
+        const enumerator = await dir.enumerate_children_async(
+            'standard::name,standard::display-name,standard::icon,standard::is-hidden,time::modified',
+            Gio.FileQueryInfoFlags.NONE, GLib.PRIORITY_DEFAULT, null);
+        for (;;) {
+            const batch = await enumerator.next_files_async(100, GLib.PRIORITY_DEFAULT, null);
+            if (batch.length === 0)
+                break;
+            all.push(...batch.filter(info => !info.get_is_hidden()));
+        }
+        enumerator.close(null);
+    } catch (e) {
+        console.warn(`magnify-dock: cannot list ${dir.get_path()}: ${e.message}`);
+    }
+    const mtime = info => info.get_attribute_uint64('time::modified');
+    return all.sort((a, b) => mtime(b) - mtime(a)).slice(0, count);
+}
 
 function readConfig(settings) {
     const iconSize = settings.get_int('icon-size');
@@ -46,6 +86,7 @@ function readConfig(settings) {
         dots: settings.get_boolean('show-running-dots'),
         launchpad: settings.get_boolean('show-launchpad'),
         trash: settings.get_boolean('show-trash'),
+        downloads: settings.get_boolean('show-downloads'),
         opacity: settings.get_double('background-opacity'),
     };
 }
@@ -85,6 +126,8 @@ class DockItem {
             return this.app.get_name();
         if (this.kind === 'trash')
             return 'Trash';
+        if (this.kind === 'downloads')
+            return 'Downloads';
         return 'Applications';
     }
 
@@ -96,6 +139,8 @@ class DockItem {
             this.icon = new St.Icon({icon_name: 'user-trash', icon_size: maxIcon});
             return this.icon;
         }
+        if (this.kind === 'downloads')
+            return new St.Icon({icon_name: 'folder-download', icon_size: maxIcon});
         // Launchpad: grid glyph on a rounded tile
         const sf = this.dock.scaleFactor;
         return new St.Bin({
@@ -158,9 +203,8 @@ class DockItem {
             return;
         }
 
-        if (this.kind === 'trash') {
-            Gio.AppInfo.launch_default_for_uri('trash:///',
-                global.create_app_launch_context(0, -1));
+        if (this.kind === 'trash' || this.kind === 'downloads') {
+            openUri(this.kind === 'trash' ? 'trash:///' : downloadsDir().get_uri());
             Main.overview.hide();
             return;
         }
@@ -184,6 +228,10 @@ class DockItem {
             this.dock.openDockMenu();
             return;
         }
+        if (this.kind === 'downloads') {
+            this._openDownloadsMenu();
+            return;
+        }
         if (!this.menu) {
             if (this.kind === 'app') {
                 this.menu = new AppMenu(this.actor, St.Side.BOTTOM, {
@@ -201,6 +249,32 @@ class DockItem {
             }
             this.dock.registerMenu(this.menu, this);
         }
+        this.menu.open(BoxPointer.PopupAnimation.FULL);
+    }
+
+    async _openDownloadsMenu() {
+        if (!this.menu) {
+            this.menu = new PopupMenu.PopupMenu(this.actor, 0.5, St.Side.BOTTOM);
+            this.dock.registerMenu(this.menu, this);
+        }
+        const dir = downloadsDir();
+        const files = await recentFiles(dir, RECENT_DOWNLOADS);
+        if (this.destroyed)
+            return;
+
+        this.menu.removeAll();
+        for (const info of files) {
+            const uri = dir.get_child(info.get_name()).get_uri();
+            const item = this.menu.addAction(info.get_display_name(), () => openUri(uri),
+                info.get_icon());
+            // Long names are shortened in the middle, keeping the extension.
+            item.label.style = 'max-width: 24em;';
+            item.label.clutter_text.ellipsize = Pango.EllipsizeMode.MIDDLE;
+        }
+        if (files.length === 0)
+            this.menu.addMenuItem(new PopupMenu.PopupMenuItem('No downloads', {reactive: false}));
+        this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem());
+        this.menu.addAction('Open Downloads', () => this._activate(1, 0));
         this.menu.open(BoxPointer.PopupAnimation.FULL);
     }
 
@@ -293,11 +367,14 @@ class Dock {
             this._launchpad = new DockItem(this, 'launchpad');
             this._sepLeft = new DockItem(this, 'separator');
         }
-        if (cfg.trash) {
+        if (cfg.downloads)
+            this._downloads = new DockItem(this, 'downloads');
+        if (cfg.trash)
             this._trash = new DockItem(this, 'trash');
+        if (cfg.downloads || cfg.trash)
             this._sepRight = new DockItem(this, 'separator');
-        }
-        for (const item of [this._launchpad, this._sepLeft, this._sepRight, this._trash]) {
+        for (const item of [this._launchpad, this._sepLeft, this._sepRight,
+            this._downloads, this._trash]) {
             if (item)
                 this._addActor(item);
         }
@@ -441,7 +518,7 @@ class Dock {
         });
 
         this._items = [this._launchpad, this._sepLeft, ...appItems,
-            this._sepRight, this._trash].filter(Boolean);
+            this._sepRight, this._downloads, this._trash].filter(Boolean);
         this._relayout();
     }
 

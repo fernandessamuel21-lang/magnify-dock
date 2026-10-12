@@ -1,11 +1,11 @@
 {
   "uuid": "magnify-dock@fernandessamuel21-lang",
   "name": "Magnify Dock",
-  "description": "A floating dock with icon magnification.\n\n- Icons grow under the pointer\n- Bounce while applications open\n- Indicators for open applications\n- Applications button and Trash\n- Optional auto-hide\n\nRight-click an empty part of the dock for its settings.",
+  "description": "A floating dock with icon magnification.\n\n- Icons grow under the pointer\n- Bounce while applications open\n- Indicators for open applications\n- Applications button, Downloads and Trash\n- Optional auto-hide\n\nRight-click an empty part of the dock for its settings.",
   "shell-version": [
     "50"
   ],
   "settings-schema": "org.gnome.shell.extensions.magnify-dock",
   "url": "https://github.com/fernandessamuel21-lang/magnify-dock",
-  "version-name": "1.0"
+  "version-name": "1.1"
 }

@@ -32,6 +32,10 @@
       <default>true</default>
       <summary>Show the Applications (Launchpad) button</summary>
     </key>
+    <key name="show-downloads" type="b">
+      <default>true</default>
+      <summary>Show the Downloads folder</summary>
+    </key>
     <key name="show-trash" type="b">
       <default>true</default>
       <summary>Show the Trash</summary>

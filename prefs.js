@@ -62,6 +62,7 @@ export default class MagnifyDockPreferences extends ExtensionPreferences {
 
         const items = new Adw.PreferencesGroup({title: 'Items'});
         items.add(switchRow(settings, 'show-launchpad', 'Show Applications button'));
+        items.add(switchRow(settings, 'show-downloads', 'Show Downloads'));
         items.add(switchRow(settings, 'show-trash', 'Show Trash'));
         page.add(items);
     }
