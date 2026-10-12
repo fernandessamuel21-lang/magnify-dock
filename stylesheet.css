@@ -1,0 +1,30 @@
+.macdock-plate {
+  background-color: rgba(40, 40, 46, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 18px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+}
+
+.macdock-dot {
+  background-color: rgba(255, 255, 255, 0.85);
+  border-radius: 2px;
+}
+
+.macdock-separator {
+  background-color: rgba(255, 255, 255, 0.30);
+}
+
+.macdock-launchpad {
+  background-gradient-direction: vertical;
+  background-gradient-start: #8e8e96;
+  background-gradient-end: #4a4a52;
+  color: white;
+}
+
+.macdock-label {
+  background-color: rgba(30, 30, 34, 0.88);
+  color: white;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 10pt;
+}

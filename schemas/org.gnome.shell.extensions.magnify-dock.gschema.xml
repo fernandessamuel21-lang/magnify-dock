@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.magnify-dock"
+          path="/org/gnome/shell/extensions/magnify-dock/">
+    <key name="icon-size" type="i">
+      <range min="24" max="96"/>
+      <default>48</default>
+      <summary>Icon size at rest, in pixels</summary>
+    </key>
+    <key name="magnification" type="b">
+      <default>true</default>
+      <summary>Magnify icons under the pointer</summary>
+    </key>
+    <key name="magnification-scale" type="d">
+      <range min="1.1" max="3.0"/>
+      <default>1.8</default>
+      <summary>Scale of the icon right under the pointer</summary>
+    </key>
+    <key name="autohide" type="b">
+      <default>false</default>
+      <summary>Automatically hide and show the dock</summary>
+    </key>
+    <key name="animate-launch" type="b">
+      <default>true</default>
+      <summary>Bounce icons while applications open</summary>
+    </key>
+    <key name="show-running-dots" type="b">
+      <default>true</default>
+      <summary>Show indicators for open applications</summary>
+    </key>
+    <key name="show-launchpad" type="b">
+      <default>true</default>
+      <summary>Show the Applications (Launchpad) button</summary>
+    </key>
+    <key name="show-trash" type="b">
+      <default>true</default>
+      <summary>Show the Trash</summary>
+    </key>
+    <key name="background-opacity" type="d">
+      <range min="0.0" max="1.0"/>
+      <default>0.42</default>
+      <summary>Opacity of the dock background</summary>
+    </key>
+  </schema>
+</schemalist>
